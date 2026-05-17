@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+src/saltext/bmc/version.py
+
+# venv / tools
+.nox/
+.venv/
+venv/
+.coverage
+.coverage.*
+htmlcov/
+artifacts/
+.pytest_cache/
+.tox/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+PLAN.md

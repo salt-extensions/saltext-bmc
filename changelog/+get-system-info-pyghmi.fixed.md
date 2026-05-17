@@ -1,0 +1,5 @@
+`bmc.get_system_info` on the IPMI backend now works on legacy BMCs. The previous implementation called `Command.get_fru()` and `Command.get_bmc_information()` — neither of which exist on `pyghmi.ipmi.command.Command`. The fix:
+
+- Calls pyghmi's actual API (`get_firmware()`) for BMC firmware version, plus a tolerant in-house FRU reader for the system FRU. Pyghmi's built-in FRU read starts at a 224-byte chunk size and only backs off on IPMI completion codes 0xC9 / 0xCA, leaving older BMCs (e.g. early HP iLO / Allegro RomPager-based BMCs) that return 0xC7 ("Request data length invalid") with no usable inventory. Our reader treats 0xC7 the same way pyghmi treats 0xC9 / 0xCA — halve the chunk and retry — then parses the bytes with pyghmi's own `FRU` class.
+- Recognises pyghmi's title-case FRU keys (`Manufacturer`, `Product name`, `Serial Number`, `Model`, `UUID`, `SKU`) in `_normalize_fru_flat`; snake-case keys are still accepted for backwards compatibility.
+- Returns `None` for fields the BMC does not expose rather than raising, matching the docstring promise. Each component (FRU, firmware, power) is queried independently.
