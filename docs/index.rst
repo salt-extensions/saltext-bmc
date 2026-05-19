@@ -17,6 +17,7 @@ Salt extension for out-of-band server management via Redfish (with IPMI fallback
 
   ref/modules/index
   ref/states/index
+  ref/utils/index
 
 .. toctree::
   :maxdepth: 2

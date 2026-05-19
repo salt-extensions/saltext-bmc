@@ -40,9 +40,9 @@ Or, when multiple targets are managed by a single minion::
 
 Auth strategy: a session is opened against
 ``/redfish/v1/SessionService/Sessions`` to obtain an ``X-Auth-Token`` for
-subsequent requests, and ``DELETE``d on close.  If session creation
-fails (older BMCs, or BMCs with the session service disabled), the
-client falls back to HTTP Basic for the request lifetime.
+subsequent requests, and DELETE'd on close.  If session creation fails
+(older BMCs, or BMCs with the session service disabled), the client
+falls back to HTTP Basic for the request lifetime.
 """
 
 from __future__ import annotations

@@ -29,3 +29,4 @@ artifacts/
 *.swo
 .DS_Store
 PLAN.md
+docs/_build/
