@@ -92,6 +92,24 @@ def power_reset(force=False):
     return __resource_funcs__["bmc.power_reset"](force=force)  # pylint: disable=undefined-variable
 
 
+def wait_for_power(state="on", timeout=600, interval=5):
+    """
+    Poll the BMC until reported power matches ``state``, or ``timeout`` elapses.
+
+    Returns a dict with ``result`` (bool), ``state`` (last observed value),
+    ``target``, ``polls``, ``elapsed`` (seconds), and ``error`` (if any).
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt -C 'T@bmc:bmc-host-01' bmc_host.wait_for_power state=on timeout=600
+    """
+    return __resource_funcs__["bmc.wait_for_power"](  # pylint: disable=undefined-variable
+        state=state, timeout=timeout, interval=interval
+    )
+
+
 def get_boot_device():
     """
     Return the current boot override.
