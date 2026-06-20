@@ -1,0 +1,3 @@
+``bmc.wait_for_power`` / ``bmc_host.wait_for_power`` execution functions and ``bmc.rebooted`` / ``bmc_host.rebooted`` states.
+
+These let an SLS file gate further work on a remote BMC-managed host actually coming back after a reset, instead of fire-and-forget. The state issues a reset, sleeps ``initial_delay`` seconds to let the BMC start the transition, polls power until ``on``, and optionally TCP-probes an OS-side ``host:port`` (typically SSH) before declaring success. Transient errors during the BMC's restart (TLS resets, 401s while the web stack restarts) are absorbed and retried instead of aborting the wait.

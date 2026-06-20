@@ -42,6 +42,7 @@ import logging
 import salt.utils.resources  # pylint: disable=import-error,no-name-in-module
 
 from saltext.bmc.utils import backend as bk
+from saltext.bmc.utils import wait as wait_util
 
 log = logging.getLogger(__name__)
 
@@ -164,6 +165,41 @@ def power_reset(force: bool = False) -> dict:
     """Reset this host (``GracefulRestart`` by default, ``ForceRestart`` if force=True)."""
     with _open() as backend:
         return backend.do_reset("ForceRestart" if force else "GracefulRestart")
+
+
+def wait_for_power(state: str = "on", timeout: int = 600, interval: int = 5) -> dict:
+    """
+    Poll the BMC until reported power matches ``state``, or ``timeout`` elapses.
+
+    A fresh BMC connection is opened per poll so transient errors during a
+    reboot (TLS resets, 401s while the BMC restarts its web stack) don't
+    abort the wait — they're counted as a non-matching result and retried.
+
+    :param state:    ``'on'`` or ``'off'``.
+    :param timeout:  Maximum seconds to wait.
+    :param interval: Seconds between polls.
+
+    :returns: dict with keys ``result`` (bool), ``state`` (last observed),
+              ``target`` (requested), ``polls``, ``elapsed``, ``error``.
+    """
+    target = str(state).strip().lower()
+    if target not in ("on", "off"):
+        raise ValueError(f"state must be 'on' or 'off', got {state!r}")
+    ok, last, polls, elapsed = wait_util.poll_until(
+        fn=power_status,
+        predicate=lambda v: v == target,
+        timeout=timeout,
+        interval=interval,
+    )
+    is_exc = isinstance(last, Exception)
+    return {
+        "result": ok,
+        "state": "unknown" if is_exc else last,
+        "target": target,
+        "polls": polls,
+        "elapsed": round(elapsed, 2),
+        "error": str(last) if is_exc else None,
+    }
 
 
 def get_boot_device() -> dict:
