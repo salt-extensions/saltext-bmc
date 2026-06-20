@@ -1,6 +1,5 @@
 """Tests for the polling helper used by wait_for_power / rebooted."""
 
-import socket
 from unittest.mock import MagicMock
 
 import pytest
@@ -100,7 +99,7 @@ def test_tcp_probe_success(monkeypatch):
 
 def test_tcp_probe_failure(monkeypatch):
     def boom(*_a, **_k):
-        raise socket.error("refused")
+        raise OSError("refused")
 
     monkeypatch.setattr(wait_util.socket, "create_connection", boom)
     assert wait_util.tcp_probe("10.0.0.1", 22) is False
