@@ -12,10 +12,14 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 5
       matrix:
         include:
-          - {salt-version: "3008.0rc1", python-version: "3.14"}
+          - {salt-version: "3008.0", python-version: "3.10"}
+          - {salt-version: "3008.0", python-version: "3.11"}
+          - {salt-version: "3008.0", python-version: "3.12"}
+          - {salt-version: "3008.0", python-version: "3.13"}
+          - {salt-version: "3008.0", python-version: "3.14"}
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -98,7 +102,7 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - {salt-version: "3008.0rc1", python-version: "3.10"}
+          - {salt-version: "3008.0", python-version: "3.10"}
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -186,7 +190,7 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - {salt-version: "3008.0rc1", python-version: "3.11"}
+          - {salt-version: "3008.0", python-version: "3.11"}
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
