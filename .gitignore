@@ -21,6 +21,8 @@ htmlcov/
 artifacts/
 .pytest_cache/
 .tox/
+.envrc
+!.envrc.example
 
 # Editor
 .vscode/
