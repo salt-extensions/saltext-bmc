@@ -13,3 +13,4 @@ _________
     boot
     ipmi
     redfish
+    wait

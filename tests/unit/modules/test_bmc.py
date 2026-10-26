@@ -1,9 +1,11 @@
 import json
+from unittest.mock import MagicMock
 
 import pytest
 import responses
 
 from saltext.bmc.modules import bmc as bmc_mod
+from saltext.bmc.utils import wait as wait_util
 from tests.conftest import REDFISH_BASE
 from tests.conftest import REDFISH_RESET_PATH
 from tests.conftest import REDFISH_SYS_PATH
@@ -113,6 +115,81 @@ def test_set_boot_device_pxe_persistent(mocked_redfish_full):
 def test_set_boot_device_rejects_unknown():
     with pytest.raises(ValueError):
         bmc_mod.set_boot_device("test-host", device="floppy")
+
+
+@pytest.fixture
+def _fast_wait_clock(monkeypatch):
+    """No-op sleep; monotonic advances by `interval` each sleep."""
+    clock = {"t": 0.0}
+    monkeypatch.setattr(wait_util.time, "monotonic", lambda: clock["t"])
+
+    def fake_sleep(s):
+        clock["t"] += s
+
+    monkeypatch.setattr(wait_util.time, "sleep", fake_sleep)
+    return clock
+
+
+def test_wait_for_power_returns_immediately_when_already_on(monkeypatch, _fast_wait_clock):
+    status = MagicMock(return_value="on")
+    monkeypatch.setattr(bmc_mod, "power_status", status)
+    # Patch open_backend so power_status (the real one) isn't relied upon;
+    # we monkeypatch the per-call closure via a fake backend.
+    fake_backend = MagicMock()
+    fake_backend.__enter__ = MagicMock(return_value=fake_backend)
+    fake_backend.__exit__ = MagicMock(return_value=False)
+    fake_backend.power_status.return_value = "on"
+    monkeypatch.setattr(bmc_mod.bk, "open_backend", lambda *a, **k: fake_backend)
+
+    result = bmc_mod.wait_for_power("test-host", state="on", timeout=10, interval=1)
+    assert result["result"] is True
+    assert result["state"] == "on"
+    assert result["target"] == "on"
+    assert result["polls"] == 1
+    assert result["error"] is None
+
+
+def test_wait_for_power_polls_until_on(monkeypatch, _fast_wait_clock):
+    fake_backend = MagicMock()
+    fake_backend.__enter__ = MagicMock(return_value=fake_backend)
+    fake_backend.__exit__ = MagicMock(return_value=False)
+    fake_backend.power_status.side_effect = ["off", "off", "on"]
+    monkeypatch.setattr(bmc_mod.bk, "open_backend", lambda *a, **k: fake_backend)
+
+    result = bmc_mod.wait_for_power("test-host", state="on", timeout=10, interval=1)
+    assert result["result"] is True
+    assert result["polls"] == 3
+
+
+def test_wait_for_power_times_out(monkeypatch, _fast_wait_clock):
+    fake_backend = MagicMock()
+    fake_backend.__enter__ = MagicMock(return_value=fake_backend)
+    fake_backend.__exit__ = MagicMock(return_value=False)
+    fake_backend.power_status.return_value = "off"
+    monkeypatch.setattr(bmc_mod.bk, "open_backend", lambda *a, **k: fake_backend)
+
+    result = bmc_mod.wait_for_power("test-host", state="on", timeout=3, interval=1)
+    assert result["result"] is False
+    assert result["state"] == "off"
+    assert result["polls"] >= 3
+
+
+def test_wait_for_power_rejects_bad_state():
+    with pytest.raises(ValueError):
+        bmc_mod.wait_for_power("test-host", state="rebooting")
+
+
+def test_wait_for_power_surfaces_transient_errors(monkeypatch, _fast_wait_clock):
+    fake_backend = MagicMock()
+    fake_backend.__enter__ = MagicMock(return_value=fake_backend)
+    fake_backend.__exit__ = MagicMock(return_value=False)
+    fake_backend.power_status.side_effect = RuntimeError("BMC down")
+    monkeypatch.setattr(bmc_mod.bk, "open_backend", lambda *a, **k: fake_backend)
+
+    result = bmc_mod.wait_for_power("test-host", state="on", timeout=2, interval=1)
+    assert result["result"] is False
+    assert result["error"] == "BMC down"
+    assert result["state"] == "unknown"
 
 
 def test_explicit_kwargs_override_pillar(mocked_redfish, system_doc, register_systems):

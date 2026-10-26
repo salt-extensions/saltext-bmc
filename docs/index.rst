@@ -9,6 +9,7 @@ Salt extension for out-of-band server management via Redfish (with IPMI fallback
   :hidden:
 
   topics/installation
+  topics/rebooting
 
 .. toctree::
   :maxdepth: 2
