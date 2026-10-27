@@ -1,18 +1,22 @@
 # saltext-bmc
 
-A Salt extension for out-of-band management of bare-metal servers via their BMC
-(Baseboard Management Controller). Speaks **Redfish** first and **IPMI** as a
-fallback (auto-detected by default), with a uniform interface for:
+A Salt extension for out-of-band management of bare-metal servers via
+their BMC (Baseboard Management Controller). Speaks **Redfish** first
+and **IPMI** as a fallback (auto-detected by default), with a uniform
+interface for:
 
 - power control (on / off / cycle / reset, graceful or forced)
-- boot-device override (disk, PXE, UEFI HTTP, BIOS setup, CD, USB — one-shot or persistent)
-- inventory (manufacturer, model, serial, UUID, BIOS version, BMC firmware)
+- boot-device override (disk, PXE, UEFI HTTP, BIOS setup, CD, USB —
+  one-shot or persistent)
+- inventory (manufacturer, model, serial, UUID, BIOS version, BMC
+  firmware)
 - sensors (temperatures, fans, voltages)
-- a low-level `bmc_redfish` passthrough for raw GET/POST/PATCH/DELETE against any Redfish endpoint
+- a low-level `bmc_redfish` passthrough for raw GET/POST/PATCH/DELETE
+  against any Redfish endpoint
 
-Primary use case: automated bare-metal provisioning (e.g. UEFI HTTP Boot for ESXi
-installs) where Salt needs to power-cycle a host and steer its next boot.
-See [`PLAN.md`](PLAN.md) for the full design.
+Primary use case: automated bare-metal provisioning (e.g. UEFI HTTP
+Boot for ESXi installs) where Salt needs to power-cycle a host and
+steer its next boot. See [`PLAN.md`](PLAN.md) for the full design.
 
 ## Install
 
@@ -43,7 +47,7 @@ saltext.bmc:
       username: ADMIN
       password: ADMIN
       backend: ipmi
-      port: 623          # IPMI-only override
+      port: 623 # IPMI-only override
 ```
 
 Execution module:
@@ -71,7 +75,7 @@ my-host-boot:
 my-host-power:
   bmc.powered:
     - name: bmc-host-01
-    - power: 'on'
+    - power: on
 ```
 
 Low-level Redfish passthrough (Redfish-only profiles):
@@ -84,8 +88,8 @@ salt-call --local bmc_redfish.patch /redfish/v1/Systems/1 \
 
 ## Resource type
 
-For Salt 3008+ resource-driven workflows, the same operations are exposed as a
-`bmc` resource type with per-host targeting:
+For Salt 3008+ resource-driven workflows, the same operations are
+exposed as a `bmc` resource type with per-host targeting:
 
 ```yaml
 # Pillar
@@ -106,11 +110,12 @@ salt -C 'T@bmc'                bmc_host.power_cycle    # all bmc resources
 
 ## What's not here
 
-- **Serial-over-LAN console** (`sol`) — SOL is inherently interactive and is
-  better served by `ipmitool sol activate` or your BMC's web console. We do not
-  ship a `bmc.sol_activate`.
-- **IPMI-side `bmc_redfish.*`** — the low-level passthrough is Redfish-only by
-  design; it errors immediately if the resolved profile uses `backend: ipmi`.
+- **Serial-over-LAN console** (`sol`) — SOL is inherently interactive
+  and is better served by `ipmitool sol activate` or your BMC's web
+  console. We do not ship a `bmc.sol_activate`.
+- **IPMI-side `bmc_redfish.*`** — the low-level passthrough is
+  Redfish-only by design; it errors immediately if the resolved
+  profile uses `backend: ipmi`.
 
 ## License
 
